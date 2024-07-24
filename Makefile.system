@@ -402,6 +402,12 @@ ifeq ($(ARCH), arm64)
 export MACOSX_DEPLOYMENT_TARGET=11.0
 ifeq ($(C_COMPILER), GCC)
 export NO_SVE = 1
+$(warning NO_SVE GCC route is selected)
+else ifeq ($(C_COMPILER), CLANG)
+export NO_SVE = 1
+$(warning NO_SVE CLANG route is selected)
+else
+$(warning NO_SVE is not selected)
 endif
 else
 export MACOSX_DEPLOYMENT_TARGET=10.8
