@@ -11,16 +11,15 @@ permissions:
 
 jobs:
   build:
-    if: "github.repository == 'OpenMathLib/OpenBLAS'"
+    if: "github.repository == 'yamazakimitsufumi/OpenBLAS'"
     runs-on: macos-14
 
     strategy:
       fail-fast: false
       matrix:
-        build: [cmake, make]
+        build: [make]
         fortran: [gfortran]
-        openmp: [0, 1]
-        ilp64: [0, 1]
+        target: [char.c,  double.c,  float.c,  int.c,  long.c,  long_double.c,  long_long.c,  short.c]
         
     steps:
       - name: Checkout repository
@@ -88,62 +87,10 @@ jobs:
           echo "compression = true" >> ~/.ccache/ccache.conf
           ccache -s
 
-      - name: Build OpenBLAS
+      - name: Build ${{ matrix.target }}
         run: |
           export LDFLAGS="-L/opt/homebrew/opt/llvm/lib"
           export CPPFLAGS="-I/opt/homebrew/opt/llvm/include"
           export CC="/opt/homebrew/opt/llvm/bin/clang"
-          case "${{ matrix.build }}" in
-            "make")
-              make -j$(nproc) DYNAMIC_ARCH=1 USE_OPENMP=${{matrix.openmp}} INTERFACE64=${{matrix.ilp64}} FC="ccache ${{ matrix.fortran }}"
-              ;;
-            "cmake")
-              export LDFLAGS="$LDFLAGS -Wl,-ld_classic"
-              mkdir build && cd build
-              cmake -DDYNAMIC_ARCH=1 \
-                    -DUSE_OPENMP=${{matrix.openmp}} \
-                    -DINTERFACE64=${{matrix.ilp64}} \
-                    -DNOFORTRAN=0 \
-                    -DBUILD_WITHOUT_LAPACK=0 \
-                    -DCMAKE_VERBOSE_MAKEFILE=ON \
-                    -DCMAKE_BUILD_TYPE=Release \
-                    -DCMAKE_Fortran_COMPILER=${{ matrix.fortran }} \
-                    -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-                    -DCMAKE_Fortran_COMPILER_LAUNCHER=ccache \
-                    ..
-              cmake --build .
-              ;;
-            *)
-              echo "::error::Configuration not supported"
-              exit 1
-              ;;
-          esac
+          ${CC} -c -march=armv8.2-a+sve ${{ matrix.target }}
 
-      - name: Show ccache status
-        continue-on-error: true
-        run: ccache -s
-
-      - name: Run tests
-        timeout-minutes: 60
-        run: |
-          case "${{ matrix.build }}" in
-            "make")
-              MAKE_FLAGS='DYNAMIC_ARCH=1 USE_OPENMP=0'
-              echo "::group::Tests in 'test' directory"
-              make -C test $MAKE_FLAGS FC="ccache ${{ matrix.fortran }}"
-              echo "::endgroup::"
-              echo "::group::Tests in 'ctest' directory"
-              make -C ctest $MAKE_FLAGS FC="ccache ${{ matrix.fortran }}"
-              echo "::endgroup::"
-              echo "::group::Tests in 'utest' directory"
-              make -C utest $MAKE_FLAGS FC="ccache ${{ matrix.fortran }}"
-              echo "::endgroup::"
-              ;;
-            "cmake")
-              cd build && ctest
-              ;;
-            *)
-              echo "::error::Configuration not supported"
-              exit 1
-              ;;
-          esac
