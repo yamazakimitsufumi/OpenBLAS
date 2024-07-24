@@ -2,10 +2,10 @@
 
 int func_short()
 {
-  short left;
-  short right;
+  short short_left;
+  short short_right;
 
-  svbool_t pg = svwhilelt_b64(left, right);
+  svbool_t pg = svwhilelt_b64(short_left, short_right);
 
   return (0);
 }

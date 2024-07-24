@@ -2,10 +2,10 @@
 
 int func_float()
 {
-  float left;
-  float right;
+  float float_left;
+  float float_right;
 
-  svbool_t pg = svwhilelt_b64(left, right);
+  svbool_t pg = svwhilelt_b64(float_left, float_right);
 
   return (0);
 }

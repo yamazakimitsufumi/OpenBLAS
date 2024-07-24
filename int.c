@@ -2,10 +2,10 @@
 
 int func_int()
 {
-  int left;
-  int right;
+  int int_left;
+  int int_right;
 
-  svbool_t pg = svwhilelt_b64(left, right);
+  svbool_t pg = svwhilelt_b64(int_left, int_right);
 
   return (0);
 }
